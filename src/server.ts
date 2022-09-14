@@ -1,11 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import cors from "cors";
 import convertHourStringToMinutes from "./utils/convert-hour-string-to-minutes";
 import convertMinutesToHourString from "./utils/convert-minutes-to-hour-string";
 
 const app = express();
 
 app.use(express.json());
+app.use(
+	cors({
+		origin: process.env.CORS_ORIGIN,
+	})
+);
+
 const prisma = new PrismaClient();
 
 app.get("/games", async (req, res) => {
@@ -64,7 +71,9 @@ app.post("/game/:uuid/ads", async (req, res) => {
 		},
 	});
 
-	return res.status(201).json({ ...newAd, id: undefined, gameId: undefined, gameUuid: game.uuid});
+	return res
+		.status(201)
+		.json({ ...newAd, id: undefined, gameId: undefined, gameUuid: game.uuid });
 });
 
 app.get("/game/:uuid/ads", async (req, res) => {
