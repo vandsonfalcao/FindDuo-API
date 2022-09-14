@@ -11,16 +11,18 @@ datasource db {
 }
 
 model Game {
-  id        String @id
+  id        Int    @id @default(autoincrement())
+  uuid      String @default(uuid())
   title     String
   bannerUrl String
 
-  ads        Ad[]
+  ads Ad[]
 }
 
 model Ad {
-  id              String   @id
-  gameId          String
+  id              Int      @id @default(autoincrement())
+  uuid            String   @default(uuid())
+  gameId          Int
   name            String
   yearsPlaying    Int
   discord         String
