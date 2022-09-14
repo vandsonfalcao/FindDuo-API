@@ -1,31 +1,132 @@
-import express from 'express'
+import { PrismaClient } from "@prisma/client";
+import express from "express";
+import convertHourStringToMinutes from "./utils/convert-hour-string-to-minutes";
+import convertMinutesToHourString from "./utils/convert-minutes-to-hour-string";
 
-const app = express()
+const app = express();
 
-app.get('/games', (req, res) => {
-  return res.json([]);
+app.use(express.json());
+const prisma = new PrismaClient();
+
+app.get("/games", async (req, res) => {
+	const games = await prisma.game.findMany({
+		select: {
+			uuid: true,
+			title: true,
+			bannerUrl: true,
+			_count: {
+				select: {
+					ads: true,
+				},
+			},
+		},
+	});
+
+	return res.json(games);
 });
 
-app.post('/ads', (req, res) => {
-  return res.status(201).json([]);
+app.post("/game/:uuid/ads", async (req, res) => {
+	const uuid = req.params.uuid;
+	const { name, yearsPlaying, discord, weekDays, hoursStart, hoursEnd, useVoiceChannel } =
+		req.body;
+
+	const game = await prisma.game.findFirst({
+		select: {
+			id: true,
+		},
+		where: {
+			uuid,
+		},
+	});
+
+	if (!game) {
+		return res.status(400).json("Game not Found");
+	}
+
+	const ad = await prisma.ad.findFirst({
+		where: {
+			discord,
+			gameId: game.id,
+		},
+	});
+
+	if (ad) {
+		return res.status(400).json("Ad Aready Exist");
+	}
+
+	const newAd = await prisma.ad.create({
+		data: {
+			gameId: game?.id,
+			name,
+			yearsPlaying,
+			discord,
+			weekDays: weekDays.join(","),
+			hoursStart: convertHourStringToMinutes(hoursStart),
+			hoursEnd: convertHourStringToMinutes(hoursEnd),
+			useVoiceChannel,
+		},
+	});
+
+	return res.status(201).json(newAd);
 });
 
+app.get("/game/:uuid/ads", async (req, res) => {
+	const gameUuid = req.params.uuid;
 
-app.get('/games/:id/ads', (req, res) => {
-  const gameId = req.params.id;
+	const game = await prisma.game.findFirst({
+		select: {
+			id: true,
+		},
+		where: {
+			uuid: gameUuid,
+		},
+	});
 
-  return res.json([
-    {id: 1, name: "Anucio 1"},
-    {id: 2, name: "Anucio 2"},
-    {id: 3, name: "Anucio 3"},
-    {id: 3, name: "Anucio 3"},
-  ])
-})
+	const ads = await prisma.ad.findMany({
+		select: {
+			uuid: true,
+			name: true,
+			weekDays: true,
+			useVoiceChannel: true,
+			yearsPlaying: true,
+			hourStart: true,
+			hourEnd: true,
+		},
+		where: {
+			gameId: game?.id,
+		},
+		orderBy: {
+			createdAt: "desc",
+		},
+	});
 
-app.get('/ads/:id/discord', (req, res) => {
-  const adId = req.params.id;
-  
-  return res.json([])
-})
+	return res.json(
+		ads.map((ad) => {
+			return {
+				...ad,
+				weekDays: ad.weekDays.split(","),
+				hourStart: convertMinutesToHourString(ad.hourStart),
+				hourEnd: convertMinutesToHourString(ad.hourEnd),
+			};
+		})
+	);
+});
 
-app.listen(3333)
+app.get("/ads/:uuid/discord", async (req, res) => {
+	const uuid = req.params.uuid;
+
+	const ad = await prisma.ad.findFirstOrThrow({
+		select: {
+			discord: true,
+		},
+		where: {
+			uuid,
+		},
+	});
+
+	return res.json({
+		discord: ad.discord,
+	});
+});
+
+app.listen(3333);

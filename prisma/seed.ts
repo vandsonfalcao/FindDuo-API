@@ -4,27 +4,27 @@ const prisma = new PrismaClient();
 async function main() {
 	const games = [
 		{
-      title: "Apex Legends",
+			title: "Apex Legends",
 			bannerUrl: "https://static-cdn.jtvnw.net/ttv-boxart/511224-188x250.jpg",
 		},
 		{
-      title: "Valorant",
+			title: "Valorant",
 			bannerUrl: "https://static-cdn.jtvnw.net/ttv-boxart/516575-188x250.jpg",
 		},
 		{
-      title: "COD: Warzone",
+			title: "COD: Warzone",
 			bannerUrl: "https://static-cdn.jtvnw.net/ttv-boxart/512710-188x250.jpg",
 		},
 		{
-      title: "Fortnite",
+			title: "Fortnite",
 			bannerUrl: "https://static-cdn.jtvnw.net/ttv-boxart/33214-188x250.jpg",
 		},
 		{
-      title: "Minecraft",
+			title: "Minecraft",
 			bannerUrl: "https://static-cdn.jtvnw.net/ttv-boxart/27471_IGDB-188x250.jpg",
 		},
 		{
-      title: "League of Legends",
+			title: "League of Legends",
 			bannerUrl: "https://static-cdn.jtvnw.net/ttv-boxart/21779-188x250.jpg",
 		},
 	];
@@ -36,9 +36,8 @@ async function main() {
 				bannerUrl: game.bannerUrl,
 			},
 		});
-    console.log(record);
+		console.log(record);
 	});
-
 }
 
 main()

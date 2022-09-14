@@ -5,13 +5,13 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "tsnd src/server.ts"
+    "dev": "tsnd --exit-child src/server.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },  
   "keywords": [],
-  "author": "",
+  "author": "Vandson Falcão",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.3.1",
