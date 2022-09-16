@@ -8,9 +8,10 @@ const app = express();
 
 app.use(express.json());
 app.use(
-	cors({
-		origin: process.env.CORS_ORIGIN,
-	})
+	cors()
+	// cors({
+	// 	origin: process.env.CORS_ORIGIN,
+	// })
 );
 
 const prisma = new PrismaClient();
@@ -34,8 +35,7 @@ app.get("/games", async (req, res) => {
 
 app.post("/game/:uuid/ads", async (req, res) => {
 	const uuid = req.params.uuid;
-	const { name, yearsPlaying, discord, weekDays, hoursStart, hoursEnd, useVoiceChannel } =
-		req.body;
+	const { name, yearsPlaying, discord, weekDays, hourStart, hourEnd, useVoiceChannel } = req.body;
 
 	const game = await prisma.game.findFirst({
 		where: {
@@ -65,8 +65,8 @@ app.post("/game/:uuid/ads", async (req, res) => {
 			yearsPlaying,
 			discord,
 			weekDays: weekDays.join(","),
-			hourStart: convertHourStringToMinutes(hoursStart),
-			hourEnd: convertHourStringToMinutes(hoursEnd),
+			hourStart: convertHourStringToMinutes(hourStart),
+			hourEnd: convertHourStringToMinutes(hourEnd),
 			useVoiceChannel,
 		},
 	});
@@ -74,6 +74,30 @@ app.post("/game/:uuid/ads", async (req, res) => {
 	return res
 		.status(201)
 		.json({ ...newAd, id: undefined, gameId: undefined, gameUuid: game.uuid });
+});
+
+app.post("/verifyIfDiscordExistInGame/:uuid", async (req, res) => {
+	const uuid = req.params.uuid;
+	const { discord } = req.body;
+
+	const game = await prisma.game.findFirst({
+		where: {
+			uuid,
+		},
+	});
+
+	if (!game) {
+		return res.status(400).json("Game not Found");
+	}
+
+	const ad = await prisma.ad.findFirst({
+		where: {
+			discord,
+			gameId: game.id,
+		},
+	});
+
+	return res.status(200).json(ad ? true : false);
 });
 
 app.get("/game/:uuid/ads", async (req, res) => {
